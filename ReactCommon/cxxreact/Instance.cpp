@@ -16,6 +16,7 @@
 #include <folly/json.h>
 
 #include <glog/logging.h>
+#include <android/log.h>
 
 #include <condition_variable>
 #include <mutex>
@@ -56,6 +57,7 @@ void Instance::loadApplication(std::unique_ptr<RAMBundleRegistry> bundleRegistry
   callback_->incrementPendingJSCalls();
   SystraceSection s("Instance::loadApplication", "sourceURL",
                     sourceURL);
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Instance::loadApplication %s\n", sourceURL.c_str());
   nativeToJsBridge_->loadApplication(std::move(bundleRegistry), std::move(string),
                                      std::move(sourceURL));
 }
@@ -68,6 +70,8 @@ void Instance::loadApplicationSync(std::unique_ptr<RAMBundleRegistry> bundleRegi
 
   SystraceSection s("Instance::loadApplicationSync", "sourceURL",
                     sourceURL);
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Instance::loadApplicationSync %s\n", sourceURL.c_str());
+
   nativeToJsBridge_->loadApplicationSync(std::move(bundleRegistry), std::move(string),
                                          std::move(sourceURL));
 }
@@ -95,6 +99,8 @@ void Instance::loadRAMBundle(std::unique_ptr<RAMBundleRegistry> bundleRegistry,
                              std::unique_ptr<const JSBigString> startupScript,
                              std::string startupScriptSourceURL,
                              bool loadSynchronously) {
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Load RAMBundle %s\n", startupScriptSourceURL.c_str());
+
   if (loadSynchronously) {
     loadApplicationSync(std::move(bundleRegistry), std::move(startupScript),
                         std::move(startupScriptSourceURL));
@@ -102,6 +108,7 @@ void Instance::loadRAMBundle(std::unique_ptr<RAMBundleRegistry> bundleRegistry,
     loadApplication(std::move(bundleRegistry), std::move(startupScript),
                     std::move(startupScriptSourceURL));
   }
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/Load RAMBundle %s\n", startupScriptSourceURL.c_str());
 }
 
 void Instance::setGlobalVariable(std::string propName,

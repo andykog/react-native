@@ -26,6 +26,7 @@
 #include "JniRAMBundleRegistry.h"
 #include "JNativeRunnable.h"
 #include "NativeArray.h"
+#include <android/log.h>
 
 using namespace facebook::jni;
 
@@ -181,11 +182,17 @@ void CatalystInstanceImpl::jniLoadScriptFromAssets(
     jni::alias_ref<JAssetManager::javaobject> assetManager,
     const std::string& assetURL,
     bool loadSynchronously) {
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Load script %s\n", assetURL.c_str());
+
   const int kAssetsLength = 9;  // strlen("assets://");
   auto sourceURL = assetURL.substr(kAssetsLength);
 
   auto manager = extractAssetManager(assetManager);
   auto script = loadScriptFromAssets(manager, sourceURL);
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Loaded script %s\n", assetURL.c_str());
+
   if (JniJSModulesUnbundle::isUnbundle(manager, sourceURL)) {
     auto bundle = JniJSModulesUnbundle::fromEntryFile(manager, sourceURL);
     auto registry = folly::make_unique<JniRAMBundleRegistry>(std::move(bundle), manager, sourceURL);
@@ -198,6 +205,8 @@ void CatalystInstanceImpl::jniLoadScriptFromAssets(
   } else {
     instance_->loadScriptFromString(std::move(script), sourceURL, loadSynchronously);
   }
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/Loaded script sync %s\n", assetURL.c_str());
 }
 
 bool CatalystInstanceImpl::isIndexedRAMBundle(const char *sourcePath) {

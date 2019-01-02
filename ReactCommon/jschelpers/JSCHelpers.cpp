@@ -15,6 +15,7 @@
 #include "JavaScriptCore.h"
 #include "Value.h"
 #include <privatedata/PrivateDataBase.h>
+#include <android/log.h>
 
 #if WITH_FBJSCEXTENSIONS
 #undef ASSERT
@@ -223,6 +224,8 @@ extern "C" {
 
 JSValueRef evaluateScript(JSContextRef context, JSStringRef script, JSStringRef sourceURL) {
   JSValueRef exn, result;
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "evaluateScript");
+
 #if defined(__APPLE__)
   void* ctx = __wix_begin_JSEvaluateScript(sourceURL);
 #endif
@@ -230,6 +233,7 @@ JSValueRef evaluateScript(JSContextRef context, JSStringRef script, JSStringRef 
 #if defined(__APPLE__)
   __wix_end_JSEvaluateScript(ctx);
 #endif
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/evaluateScript");
   if (result == nullptr) {
     throw JSException(context, exn, sourceURL);
   }

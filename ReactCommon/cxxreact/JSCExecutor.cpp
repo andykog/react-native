@@ -38,6 +38,7 @@
 #include "RAMBundleRegistry.h"
 #include "RecoverableError.h"
 #include "SystraceSection.h"
+#include <android/log.h>
 
 #if defined(WITH_JSC_MEMORY_PRESSURE)
 #include <jsc_memory.h>
@@ -177,21 +178,21 @@ namespace facebook {
       return false;
 #endif
     }
-    
+
 #if defined(__APPLE__)
     extern "C" {
       extern void __wix_mark_event_js_callback(JSContextRef ctx, size_t argumentCount, const JSValueRef arguments[]);
       JSValueRef __wix_cfunc_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-      
+
       JSValueRef __wix_cfunc_callback(JSContextRef ctx, __unused JSObjectRef function, __unused JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], __unused JSValueRef* exception)
       {
         __wix_mark_event_js_callback(ctx, argumentCount, arguments);
-        
+
         return JSC_JSValueMakeUndefined(ctx);
       }
     }
 #endif
-    
+
     void JSCExecutor::initOnJSVMThread() throw(JSException) {
       SystraceSection s("JSCExecutor::initOnJSVMThread");
 
@@ -242,7 +243,7 @@ namespace facebook {
 #if defined(__APPLE__)
       installGlobalFunction(m_context, "__wix_events_func", __wix_cfunc_callback);
 #endif
-      
+
       installGlobalFunction(m_context, "nativeLoggingHook", JSCNativeHooks::loggingHook);
       installGlobalFunction(m_context, "nativePerformanceNow", JSCNativeHooks::nowHook);
 
@@ -395,6 +396,7 @@ namespace facebook {
     void JSCExecutor::loadApplicationScript(std::unique_ptr<const JSBigString> script, std::string sourceURL) {
       SystraceSection s("JSCExecutor::loadApplicationScript",
                         "sourceURL", sourceURL);
+      __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "JSCExecutor::loadApplicationScript %s\n", sourceURL.c_str());
 
       std::string scriptName = simpleBasename(sourceURL);
       ReactMarker::logTaggedMarker(ReactMarker::RUN_JS_BUNDLE_START, scriptName.c_str());
@@ -412,7 +414,9 @@ namespace facebook {
             if (!bcSourceCode) {
               throw std::runtime_error("Unexpected error opening compiled bundle");
             }
+            __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "bcSourceCode evaluateSourceCode %s\n", jsSourceURL.c_str());
             evaluateSourceCode(m_context, bcSourceCode, jsSourceURL);
+            __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "bcSourceCode /evaluateSourceCode %s\n", jsSourceURL.c_str());
 
             flush();
 
@@ -452,7 +456,10 @@ namespace facebook {
         {
           SystraceSection s_("JSCExecutor::loadApplicationScript-createExpectingAscii");
           ReactMarker::logMarker(ReactMarker::JS_BUNDLE_STRING_CONVERT_START);
+          __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "JS_BUNDLE_STRING_CONVERT_START");
+
           jsScript = adoptString(std::move(script));
+          __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/JS_BUNDLE_STRING_CONVERT_START");
           ReactMarker::logMarker(ReactMarker::JS_BUNDLE_STRING_CONVERT_STOP);
         }
 #ifdef WITH_FBSYSTRACE
@@ -460,13 +467,19 @@ namespace facebook {
 #endif
 
         SystraceSection s_("JSCExecutor::loadApplicationScript-evaluateScript");
+        __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "JSCExecutor::loadApplicationScript-evaluateScript");
+
         evaluateScript(m_context, jsScript, jsSourceURL);
+        __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/JSCExecutor::loadApplicationScript-evaluateScript");
+
       }
 
       flush();
 
       ReactMarker::logMarker(ReactMarker::CREATE_REACT_CONTEXT_STOP);
       ReactMarker::logTaggedMarker(ReactMarker::RUN_JS_BUNDLE_STOP, scriptName.c_str());
+      __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/JSCExecutor::loadApplicationScript %s\n", sourceURL.c_str());
+
     }
 
     void JSCExecutor::setBundleRegistry(std::unique_ptr<RAMBundleRegistry> bundleRegistry) {

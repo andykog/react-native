@@ -212,12 +212,16 @@ public class CatalystInstanceImpl implements CatalystInstance {
 
   /* package */ void loadScriptFromAssets(AssetManager assetManager, String assetURL, boolean loadSynchronously) {
     mSourceURL = assetURL;
+    Log.d("Catalyst", "loadScriptFromAssets " + assetURL);
     jniLoadScriptFromAssets(assetManager, assetURL, loadSynchronously);
+    Log.d("Catalyst", "/loadScriptFromAssets " + assetURL);
   }
 
   /* package */ void loadScriptFromFile(String fileName, String sourceURL, boolean loadSynchronously) {
     mSourceURL = sourceURL;
+    Log.d("Catalyst", "loadScriptFromFile " + fileName + " - " + sourceURL);
     jniLoadScriptFromFile(fileName, sourceURL, loadSynchronously);
+    Log.d("Catalyst", "/loadScriptFromFile " + fileName + " - " + sourceURL);
   }
 
   private native void jniSetSourceURL(String sourceURL);

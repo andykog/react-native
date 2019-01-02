@@ -11,6 +11,7 @@
 #include <utility>
 
 #include <folly/Memory.h>
+#include <android/log.h>
 
 using magic_number_t = uint32_t;
 const magic_number_t MAGIC_FILE_HEADER = 0xFB0BD1E5;
@@ -56,6 +57,9 @@ bool JniJSModulesUnbundle::isUnbundle(
   }
 
   auto magicFileName = jsModulesDir(assetName) + MAGIC_FILE_NAME;
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "_isUnbundle open %s\n", assetName.c_str());
+
   auto asset = openAsset(assetManager, magicFileName.c_str());
   if (asset == nullptr) {
     return false;
@@ -63,6 +67,9 @@ bool JniJSModulesUnbundle::isUnbundle(
 
   magic_number_t fileHeader = 0;
   AAsset_read(asset.get(), &fileHeader, sizeof(fileHeader));
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/_isUnbundle done");
+
   return fileHeader == htole32(MAGIC_FILE_HEADER);
 }
 
@@ -75,7 +82,12 @@ JSModulesUnbundle::Module JniJSModulesUnbundle::getModule(uint32_t moduleId) con
   auto sourceUrl = sourceUrlBuilder.str();
 
   auto fileName = m_moduleDirectory + sourceUrl;
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Open asset %s\n", fileName.c_str());
+
   auto asset = openAsset(m_assetManager, fileName, AASSET_MODE_BUFFER);
+
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Read asset %s\n", fileName.c_str());
 
   const char *buffer = nullptr;
   if (asset != nullptr) {
@@ -84,6 +96,8 @@ JSModulesUnbundle::Module JniJSModulesUnbundle::getModule(uint32_t moduleId) con
   if (buffer == nullptr) {
     throw ModuleNotFound("Module not found: " + sourceUrl);
   }
+  __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "Got asset %s\n", fileName.c_str());
+
   return {sourceUrl, std::string(buffer, AAsset_getLength(asset.get()))};
 }
 

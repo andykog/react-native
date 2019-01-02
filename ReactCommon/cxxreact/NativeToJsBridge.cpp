@@ -12,6 +12,7 @@
 #include "MethodCall.h"
 #include "MessageQueueThread.h"
 #include "RAMBundleRegistry.h"
+#include <android/log.h>
 
 #ifdef WITH_FBSYSTRACE
 #include <fbsystrace.h>
@@ -100,11 +101,16 @@ void NativeToJsBridge::loadApplication(
        startupScriptSourceURL=std::move(startupScriptSourceURL)]
         (JSExecutor* executor) mutable {
     auto bundleRegistry = bundleRegistryWrap.move();
+    __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "NativeToJsBridge:loadApplication %s\n", startupScriptSourceURL.c_str());
+
     if (bundleRegistry) {
       executor->setBundleRegistry(std::move(bundleRegistry));
     }
+    __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "NativeToJsBridge::loadApplication /setBundleRegistry %s\n", startupScriptSourceURL.c_str());
+
     executor->loadApplicationScript(std::move(*startupScript),
                                     std::move(startupScriptSourceURL));
+    __android_log_print(ANDROID_LOG_VERBOSE, "NDK", "/NativeToJsBridge:loadApplication %s\n", startupScriptSourceURL.c_str());
   });
 }
 
